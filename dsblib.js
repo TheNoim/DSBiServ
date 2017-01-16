@@ -6,6 +6,7 @@ const request = require('request');
 const fs = require('fs');
 const cheerio = require('cheerio');
 const _ = require('lodash');
+const async = require('async');
 
 class DSBLibrary {
 
@@ -34,6 +35,63 @@ class DSBLibrary {
         } catch (e) {
             this.cookies = null;
         }
+    }
+
+    getDSBPlans(DSBCallback){
+        async.waterfall([
+            (WaterfallCallback) => {
+                if (this.cookies){
+                    this._checkCookies((error) => {
+                        if (error){
+                            this._login(WaterfallCallback);
+                        } else {
+                            WaterfallCallback();
+                        }
+                    });
+                } else {
+                    this._login(WaterfallCallback);
+                }
+            },
+            (WaterfallCallback) => this._DoRequest(`https://${this.host}/iserv/plan/show/raw/DSB%20Schueler`, null, false, WaterfallCallback),
+            (HTML, WaterfallCallback) => WaterfallCallback(null, this._FastIFrameParse(HTML, 'iframe[name="DSBHPLehrer"]')),
+            (URL, WaterfallCallback) => this._DoRequest(URL, null, true, WaterfallCallback),
+            (HTML, URLReferer, WaterfallCallback) => WaterfallCallback(null, this._FastIFrameParse(HTML, 'iframe'), URLReferer),
+            (URL, URLReferer, WaterfallCallback) => this._DoRequest(URL, URLReferer, false, WaterfallCallback),
+            (HTML, WaterfallCallback) => {
+                /**
+                 * Now lets get both plans: Vertretungsplan-Modul, Vertretungsplan-Modul 2
+                 */
+                let Plans = [];
+                async.each(this._FastIFrameParse(HTML, ['iframe[name="Vertretungsplan-Modul"]','iframe[name="Vertretungsplan-Modul 2"]']), (IFrame, EachCallback) => {
+                    const URL = IFrame.src;
+                    if (URL){
+                        this._DoRequest(URL, null, true, (error, HTML, Referer) => {
+                            if (error) {
+                                EachCallback(error);
+                            } else {
+                                const PlanURL = this._GetThisShittyJSLocationHref(HTML);
+                                this._DoRequest(PlanURL, Referer, false, (error, HTML) => {
+                                    if (error){
+                                        EachCallback(error);
+                                    } else {
+                                        Plans.push(HTML);
+                                        EachCallback();
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        EachCallback();
+                    }
+
+                }, (error) => {
+                    WaterfallCallback(error, Plans);
+                });
+            }
+        ], (error, Plans) => {
+            if (error) this.log(error);
+            DSBCallback(error, Plans);
+        });
     }
 
     /**
@@ -167,11 +225,33 @@ class DSBLibrary {
      * Fast do a request and handel errors
      * @param URL
      * @param Referer - The on going url to fake a iFrame request
+     * @param WithURL
      * @param RequestCallback
      * @private
      */
-    _DoRequest(URL, Referer, RequestCallback){
+    _DoRequest(URL, Referer, WithURL, RequestCallback){
+        let options = {
+            headers: {
+                Cookie: this.cookieHeader
+            }
+        };
+        if (Referer){
+            options.headers.Referer = Referer;
+        }
+        this.log(`[DEBUG] Do request to ${URL} with this options: ${JSON.stringify(options)}`);
+        request(URL, options, (error, response, body) => {
+            if (!error && response.statusCode == 200){
+                this.log(`[DEBUG] Successfully!`);
+                if (WithURL){
+                    RequestCallback(null, body, URL);
+                } else {
+                    RequestCallback(null, body);
+                }
 
+            } else {
+                RequestCallback(`Hmm. Something happened. Maybe you know what to do with this status code ${response.statusCode} and this error ${error}`);
+            }
+        });
     }
 
     /**
