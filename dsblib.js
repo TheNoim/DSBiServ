@@ -71,12 +71,14 @@ class DSBLibrary {
                             } else {
                                 const PlanURL = this._GetThisShittyJSLocationHref(HTML);
                                 this._DoRequest(PlanURL, Referer, false, (error, HTML) => {
-                                    if (error){
-                                        EachCallback(error);
-                                    } else {
-                                        Plans.push(HTML);
-                                        EachCallback();
-                                    }
+                                    this._DoRequest(this._FastIFrameParse(HTML, 'iframe'), PlanURL, false, (error, HTML) => {
+                                        if (error){
+                                            EachCallback(error);
+                                        } else {
+                                            Plans.push(HTML);
+                                            EachCallback();
+                                        }
+                                    });
                                 });
                             }
                         });
