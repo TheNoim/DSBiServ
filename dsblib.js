@@ -4,6 +4,8 @@
 
 const request = require('request');
 const fs = require('fs');
+const cheerio = require('cheerio');
+const _ = require('lodash');
 
 class DSBLibrary {
 
@@ -133,6 +135,55 @@ class DSBLibrary {
             }
         }
         this.cookieHeader = cookieString;
+    }
+
+    /**
+     * Fast parse the html and get the src of a iFrame with given selector
+     * @param HTML
+     * @param {Array|string} Selector
+     * @returns {Array|jQuery}
+     * @private
+     */
+    _FastIFrameParse(HTML, Selectors){
+        const $ = cheerio.load(HTML);
+        if (_.isArray(Selectors)){
+            let returnArray = [];
+            for (let index in Selectors){
+                if (Selectors.hasOwnProperty(index)){
+                    returnArray.push({
+                        selector: Selectors[index],
+                        src: $(Selectors[index]).attr('src')
+                    });
+                }
+            }
+            return returnArray;
+        } else {
+            return $(Selectors).attr('src');
+        }
+
+    }
+
+    /**
+     * Fast do a request and handel errors
+     * @param URL
+     * @param Referer - The on going url to fake a iFrame request
+     * @param RequestCallback
+     * @private
+     */
+    _DoRequest(URL, Referer, RequestCallback){
+
+    }
+
+    /**
+     * Parse the html and fast get this shitty location.href url
+     * @param HTML
+     * @returns {XML|*|void|String|string}
+     * @private
+     */
+    _GetThisShittyJSLocationHref(HTML) {
+        const superRegex = /location.href=".+(?=";)/;
+        const m = superRegex.exec(HTML);
+        return m[0].replace('location.href="', '');
     }
 
 }
