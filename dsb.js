@@ -51,7 +51,7 @@ class DSBLibrary {
             } else {
                 let ResultPlans = [];
                 async.each(Plans, (Plan, EachCallback) => {
-                    this.parsePlan(Plan.html, (error, BPlan) => {
+                    DSBLibrary.parsePlan(Plan.html, (error, BPlan) => {
                         if (error) return EachCallback(error);
                         ResultPlans.push({
                             date: Plan.date,
@@ -84,25 +84,25 @@ class DSBLibrary {
                 }
             },
             (WaterfallCallback) => this._DoRequest(`https://${this.host}/iserv/plan/show/raw/DSB%20Schueler`, null, false, WaterfallCallback),
-            (HTML, WaterfallCallback) => WaterfallCallback(null, this._FastIFrameParse(HTML, 'iframe[name="DSBHPLehrer"]')),
+            (HTML, WaterfallCallback) => WaterfallCallback(null, DSBLibrary._FastIFrameParse(HTML, 'iframe[name="DSBHPLehrer"]')),
             (URL, WaterfallCallback) => this._DoRequest(URL, null, true, WaterfallCallback),
-            (HTML, URLReferer, WaterfallCallback) => WaterfallCallback(null, this._FastIFrameParse(HTML, 'iframe'), URLReferer),
+            (HTML, URLReferer, WaterfallCallback) => WaterfallCallback(null, DSBLibrary._FastIFrameParse(HTML, 'iframe'), URLReferer),
             (URL, URLReferer, WaterfallCallback) => this._DoRequest(URL, URLReferer, false, WaterfallCallback),
             (HTML, WaterfallCallback) => {
                 /**
                  * Now lets get both plans: Vertretungsplan-Modul, Vertretungsplan-Modul 2
                  */
                 let Plans = [];
-                async.each(this._FastIFrameParse(HTML, ['iframe[name="Vertretungsplan-Modul"]','iframe[name="Vertretungsplan-Modul 2"]']), (IFrame, EachCallback) => {
+                async.each(DSBLibrary._FastIFrameParse(HTML, ['iframe[name="Vertretungsplan-Modul"]','iframe[name="Vertretungsplan-Modul 2"]']), (IFrame, EachCallback) => {
                     const URL = IFrame.src;
                     if (URL){
                         this._DoRequest(URL, null, true, (error, HTML, Referer) => {
                             if (error) {
                                 EachCallback(error);
                             } else {
-                                const PlanURL = this._GetThisShittyJSLocationHref(HTML);
+                                const PlanURL = DSBLibrary._GetThisShittyJSLocationHref(HTML);
                                 this._DoRequest(PlanURL, Referer, false, (error, HTML) => {
-                                    this._DoRequest(this._FastIFrameParse(HTML, 'iframe'), PlanURL, false, (error, HTML) => {
+                                    this._DoRequest(DSBLibrary._FastIFrameParse(HTML, 'iframe'), PlanURL, false, (error, HTML) => {
                                         if (error){
                                             EachCallback(error);
                                         } else {
@@ -242,7 +242,7 @@ class DSBLibrary {
      * @returns {Array|jQuery}
      * @private
      */
-    _FastIFrameParse(HTML, Selectors){
+    static _FastIFrameParse(HTML, Selectors){
         const $ = cheerio.load(HTML);
         if (_.isArray(Selectors)){
             let returnArray = [];
@@ -303,7 +303,7 @@ class DSBLibrary {
      * @returns {XML|*|void|String|string}
      * @private
      */
-    _GetThisShittyJSLocationHref(HTML) {
+    static _GetThisShittyJSLocationHref(HTML) {
         const superRegex = /location.href=".+(?=";)/;
         const m = superRegex.exec(HTML);
         return m[0].replace('location.href="', '');
@@ -314,85 +314,97 @@ class DSBLibrary {
      * @param {String} HTMLPlan
      * @param {function} ParseCallback
      */
-    parsePlan(HTMLPlan, ParseCallback) {
+    static parsePlan(HTMLPlan, ParseCallback) {
         try {
             const $ = cheerio.load(HTMLPlan);
             const PlanTableHTML = $('table[class="mon_list"]').parent().html();
             const TableJson = tabletojson.convert(PlanTableHTML);
             if (TableJson.length == 1){
-                const Plan = TableJson[0];
-                // Clean up
-                for (let PlanIndex in Plan){
-                    if (Plan.hasOwnProperty(PlanIndex)){
-                        if (Plan[PlanIndex].Entfall != null && typeof Plan[PlanIndex].Entfall == 'string') Plan[PlanIndex].Entfall = Plan[PlanIndex].Entfall.toLowerCase() == "x";
-
-                        for (let key in Plan[PlanIndex]){
-                            if (Plan[PlanIndex].hasOwnProperty(key)){
-                                if (typeof Plan[PlanIndex][key] == 'string'){
-                                    Plan[PlanIndex][key] = Plan[PlanIndex][key].trim();
-                                    if (Plan[PlanIndex][key] == "") Plan[PlanIndex][key] = null;
-                                }
-                            }
-                        }
-
-                        if (Plan[PlanIndex]['Std.']){
-                            Plan[PlanIndex]['Std.'] = Plan[PlanIndex]['Std.'].replaceAll(/\s/, '');
-                            if (Plan[PlanIndex]['Std.'].includes('-')){
-                                Plan[PlanIndex].Stunden = rangeParser.parse(Plan[PlanIndex]['Std.']);
-                            } else {
-                                Plan[PlanIndex].Stunden = [Plan[PlanIndex]['Std.']];
-                            }
-                        }
-                        if (Plan[PlanIndex].Raum == "---"){
-                            Plan[PlanIndex].Raum = null;
-                        }
-                        if (Plan[PlanIndex]['Klasse(n)']){
-                            const CompleteClass = Plan[PlanIndex]['Klasse(n)'];
-                            const Years = CompleteClass.replaceAll(/\D/, '');
-                            const Classes = CompleteClass.replaceAll(/\d/, '');
-                            Plan[PlanIndex].KlassenStufen = [];
-                            Plan[PlanIndex].KlassenBuchstaben = [];
-                            Plan[PlanIndex].Klassen = [];
-                            for (let i = 5; i <= 13; i ++){
-                                if (Years.match(i)) Plan[PlanIndex].KlassenStufen.push(i);
-                            }
-                            const ClassCharList = [
-                                /A(?!G)/,
-                                /B(?!L)/,
-                                "C",
-                                "D",
-                                "BL",
-                                "MN",
-                                "MZ",
-                                "AG"
-                            ];
-                            for (let i = 0; i < ClassCharList.length; i++){
-                                const match = Classes.match(ClassCharList[i]);
-                                if (match) Plan[PlanIndex].KlassenBuchstaben.push(match[0]);
-                            }
-                            for (let Index in Plan[PlanIndex].KlassenStufen){
-                                if (Plan[PlanIndex].KlassenStufen.hasOwnProperty(Index)){
-                                    const Stufe = Plan[PlanIndex].KlassenStufen[Index];
-                                    for (let BIndex in Plan[PlanIndex].KlassenBuchstaben){
-                                        if (Plan[PlanIndex].KlassenBuchstaben.hasOwnProperty(BIndex)){
-                                            const Buchstabe = Plan[PlanIndex].KlassenBuchstaben[BIndex];
-                                            Plan[PlanIndex].Klassen.push(`${Stufe}${Buchstabe}`);
-                                        }
-                                    }
-                                }
-                            }
-                            Plan[PlanIndex].GanzerJahrgang = Plan[PlanIndex].KlassenBuchstaben.length == 0 && Plan[PlanIndex].Klassen.length == 0;
-
-                        }
-                    }
-                }
-                ParseCallback(null, Plan);
+                ParseCallback(null, DSBLibrary._reformatPlanJSON(TableJson[0]));
             } else {
                 ParseCallback(`Something went wrong. Maybe they changed the format ?`);
             }
         } catch (e){
             return ParseCallback(`Something went wrong. Maybe you should check out this error: ${e}`);
         }
+    }
+
+    /**
+     * Reformat the plan json
+     * @param {JSON} JSON
+     * @returns {JSON}
+     * @private
+     */
+    static _reformatPlanJSON(JSON){
+        const Plan = JSON;
+        for (let PlanIndex in Plan){
+            if (Plan.hasOwnProperty(PlanIndex)){
+                if (Plan[PlanIndex].Entfall != null && typeof Plan[PlanIndex].Entfall == 'string') Plan[PlanIndex].Entfall = Plan[PlanIndex].Entfall.toLowerCase() == "x";
+
+                for (let key in Plan[PlanIndex]){
+                    if (Plan[PlanIndex].hasOwnProperty(key)){
+                        if (typeof Plan[PlanIndex][key] == 'string'){
+                            Plan[PlanIndex][key] = Plan[PlanIndex][key].trim();
+                            if (Plan[PlanIndex][key] == "") Plan[PlanIndex][key] = null;
+                        }
+                    }
+                }
+
+                if (Plan[PlanIndex]['Std.']){
+                    Plan[PlanIndex]['Std.'] = Plan[PlanIndex]['Std.'].replaceAll(/\s/, '');
+                    if (Plan[PlanIndex]['Std.'].includes('-')){
+                        Plan[PlanIndex].Stunden = rangeParser.parse(Plan[PlanIndex]['Std.']);
+                    } else {
+                        Plan[PlanIndex].Stunden = [Plan[PlanIndex]['Std.']];
+                    }
+                }
+
+                if (Plan[PlanIndex].Raum == "---"){
+                    Plan[PlanIndex].Raum = null;
+                }
+
+                // 5678910111213ABBLCDMNMZAG -> JSON
+                if (Plan[PlanIndex]['Klasse(n)']){
+                    const CompleteClass = Plan[PlanIndex]['Klasse(n)'];
+                    const Years = CompleteClass.replaceAll(/\D/, '');
+                    const Classes = CompleteClass.replaceAll(/\d/, '');
+                    Plan[PlanIndex].KlassenStufen = [];
+                    Plan[PlanIndex].KlassenBuchstaben = [];
+                    Plan[PlanIndex].Klassen = [];
+                    for (let i = 5; i <= 13; i ++){
+                        if (Years.match(i)) Plan[PlanIndex].KlassenStufen.push(i);
+                    }
+                    const ClassCharList = [
+                        /A(?!G)/,
+                        /B(?!L)/,
+                        "C",
+                        "D",
+                        "BL",
+                        "MN",
+                        "MZ",
+                        "AG"
+                    ];
+                    for (let i = 0; i < ClassCharList.length; i++){
+                        const match = Classes.match(ClassCharList[i]);
+                        if (match) Plan[PlanIndex].KlassenBuchstaben.push(match[0]);
+                    }
+                    for (let Index in Plan[PlanIndex].KlassenStufen){
+                        if (Plan[PlanIndex].KlassenStufen.hasOwnProperty(Index)){
+                            const Stufe = Plan[PlanIndex].KlassenStufen[Index];
+                            for (let BIndex in Plan[PlanIndex].KlassenBuchstaben){
+                                if (Plan[PlanIndex].KlassenBuchstaben.hasOwnProperty(BIndex)){
+                                    const Buchstabe = Plan[PlanIndex].KlassenBuchstaben[BIndex];
+                                    Plan[PlanIndex].Klassen.push(`${Stufe}${Buchstabe}`);
+                                }
+                            }
+                        }
+                    }
+                    Plan[PlanIndex].GanzerJahrgang = Plan[PlanIndex].KlassenBuchstaben.length == 0 && Plan[PlanIndex].Klassen.length == 0;
+
+                }
+            }
+        }
+        return Plan;
     }
 
 }
