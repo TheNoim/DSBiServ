@@ -7,6 +7,8 @@ const fs = require('fs');
 const cheerio = require('cheerio');
 const _ = require('lodash');
 const async = require('async');
+const tabletojson = require('tabletojson');
+const rangeParser = require('parse-numeric-range');
 
 class DSBLibrary {
 
@@ -43,6 +45,7 @@ class DSBLibrary {
                 if (this.cookies){
                     this._checkCookies((error) => {
                         if (error){
+                            this.log(`[DEBUG] ${error}`);
                             this._login(WaterfallCallback);
                         } else {
                             WaterfallCallback();
@@ -166,7 +169,7 @@ class DSBLibrary {
              * @type {string}
              */
             this._makeCookieHeaderString();
-            request(`https://${this.host}/iserv/login_check`, {
+            request(`https://${this.host}/idesk/nav.php`, {
                 headers: {
                     Cookie: this.cookieHeader
                 },
@@ -268,6 +271,97 @@ class DSBLibrary {
         return m[0].replace('location.href="', '');
     }
 
+    /**
+     * Parse the DSB Plan in a usable format
+     * @param {String} HTMLPlan
+     * @param {function} ParseCallback
+     */
+    parsePlan(HTMLPlan, ParseCallback) {
+        try {
+            const $ = cheerio.load(HTMLPlan);
+            const PlanTableHTML = $('table[class="mon_list"]').parent().html();
+            const TableJson = tabletojson.convert(PlanTableHTML);
+            if (TableJson.length == 1){
+                const Plan = TableJson[0];
+                // Clean up
+                for (let PlanIndex in Plan){
+                    if (Plan.hasOwnProperty(PlanIndex)){
+                        if (Plan[PlanIndex].Entfall != null && typeof Plan[PlanIndex].Entfall == 'string') Plan[PlanIndex].Entfall = Plan[PlanIndex].Entfall.toLowerCase() == "x";
+
+                        for (let key in Plan[PlanIndex]){
+                            if (Plan[PlanIndex].hasOwnProperty(key)){
+                                if (typeof Plan[PlanIndex][key] == 'string'){
+                                    Plan[PlanIndex][key] = Plan[PlanIndex][key].trim();
+                                    if (Plan[PlanIndex][key] == "") Plan[PlanIndex][key] = null;
+                                }
+                            }
+                        }
+
+                        if (Plan[PlanIndex]['Std.']){
+                            Plan[PlanIndex]['Std.'] = Plan[PlanIndex]['Std.'].replaceAll(/\s/, '');
+                            if (Plan[PlanIndex]['Std.'].includes('-')){
+                                Plan[PlanIndex].Stunden = rangeParser.parse(Plan[PlanIndex]['Std.']);
+                            } else {
+                                Plan[PlanIndex].Stunden = [Plan[PlanIndex]['Std.']];
+                            }
+                        }
+                        if (Plan[PlanIndex].Raum == "---"){
+                            Plan[PlanIndex].Raum = null;
+                        }
+                        if (Plan[PlanIndex]['Klasse(n)']){
+                            const CompleteClass = Plan[PlanIndex]['Klasse(n)'];
+                            const Years = CompleteClass.replaceAll(/\D/, '');
+                            const Classes = CompleteClass.replaceAll(/\d/, '');
+                            Plan[PlanIndex].KlassenStufen = [];
+                            Plan[PlanIndex].KlassenBuchstaben = [];
+                            Plan[PlanIndex].Klassen = [];
+                            for (let i = 5; i <= 13; i ++){
+                                if (Years.match(i)) Plan[PlanIndex].KlassenStufen.push(i);
+                            }
+                            const ClassCharList = [
+                                /A(?!G)/,
+                                /B(?!L)/,
+                                "C",
+                                "D",
+                                "BL",
+                                "MN",
+                                "MZ",
+                                "AG"
+                            ];
+                            for (let i = 0; i < ClassCharList.length; i++){
+                                const match = Classes.match(ClassCharList[i]);
+                                if (match) Plan[PlanIndex].KlassenBuchstaben.push(match[0]);
+                            }
+                            for (let Index in Plan[PlanIndex].KlassenStufen){
+                                if (Plan[PlanIndex].KlassenStufen.hasOwnProperty(Index)){
+                                    const Stufe = Plan[PlanIndex].KlassenStufen[Index];
+                                    for (let BIndex in Plan[PlanIndex].KlassenBuchstaben){
+                                        if (Plan[PlanIndex].KlassenBuchstaben.hasOwnProperty(BIndex)){
+                                            const Buchstabe = Plan[PlanIndex].KlassenBuchstaben[BIndex];
+                                            Plan[PlanIndex].Klassen.push(`${Stufe}${Buchstabe}`);
+                                        }
+                                    }
+                                }
+                            }
+                            Plan[PlanIndex].GanzerJahrgang = Plan[PlanIndex].KlassenBuchstaben.length == 0 && Plan[PlanIndex].Klassen.length == 0;
+
+                        }
+                    }
+                }
+                ParseCallback(null, Plan);
+            } else {
+                ParseCallback(`Something went wrong. Maybe they changed the format ?`);
+            }
+        } catch (e){
+            return ParseCallback(`Something went wrong. Maybe you should check out this error: ${e}`);
+        }
+    }
+
 }
+
+String.prototype.replaceAll = function(search, replacement) {
+    let target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};
 
 module.exports = DSBLibrary;
