@@ -54,3 +54,4 @@ yarn.lock
 config.json
 cookie_cache.json
 *.html
+test.json

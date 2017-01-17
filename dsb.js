@@ -9,6 +9,7 @@ const _ = require('lodash');
 const async = require('async');
 const tabletojson = require('tabletojson');
 const rangeParser = require('parse-numeric-range');
+const iconv = require('iconv-lite');
 
 class DSBLibrary {
 
@@ -37,6 +38,33 @@ class DSBLibrary {
         } catch (e) {
             this.cookies = null;
         }
+    }
+
+    /**
+     * Download the dsb plans and get them parsed.
+     * @param {function} DSBCallback
+     */
+    getParsed(DSBCallback){
+        this.getDSBPlans((error, Plans) => {
+            if (error){
+                DSBCallback(error);
+            } else {
+                let ResultPlans = [];
+                async.each(Plans, (Plan, EachCallback) => {
+                    this.parsePlan(Plan.html, (error, BPlan) => {
+                        if (error) return EachCallback(error);
+                        ResultPlans.push({
+                            date: Plan.date,
+                            plan: BPlan,
+                            html: Plan.html
+                        });
+                        EachCallback();
+                    });
+                }, (error) => {
+                    DSBCallback(error, ResultPlans);
+                });
+            }
+        });
     }
 
     getDSBPlans(DSBCallback){
@@ -244,8 +272,11 @@ class DSBLibrary {
     _DoRequest(URL, Referer, WithURL, RequestCallback){
         let options = {
             headers: {
-                Cookie: this.cookieHeader
-            }
+                Cookie: this.cookieHeader,
+                "Accept-Encoding": "UTF-8",
+                "Content-Type": "text/plain; charset=utf-8;",
+            },
+            encoding: null
         };
         if (Referer){
             options.headers.Referer = Referer;
@@ -255,9 +286,9 @@ class DSBLibrary {
             if (!error && response.statusCode == 200){
                 this.log(`[DEBUG] Successfully!`);
                 if (WithURL){
-                    RequestCallback(null, body, URL);
+                    RequestCallback(null, iconv.decode(Buffer.from(body), 'cp1252'), URL);
                 } else {
-                    RequestCallback(null, body);
+                    RequestCallback(null, iconv.decode(Buffer.from(body), 'cp1252'));
                 }
 
             } else {

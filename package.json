@@ -5,6 +5,7 @@
     "babelify": "^7.3.0",
     "browserify": "^13.3.0",
     "cheerio": "^0.22.0",
+    "iconv-lite": "^0.4.15",
     "lodash": "^4.17.4",
     "lodash.merge": "^4.6.0",
     "parse-numeric-range": "^0.0.2",
