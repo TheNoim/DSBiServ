@@ -56,6 +56,7 @@ class DSBLibrary {
                         ResultPlans.push({
                             date: Plan.date,
                             plan: BPlan,
+                            lastUpdate: DSBLibrary._getStatus(Plan.html),
                             html: Plan.html
                         });
                         EachCallback();
@@ -405,6 +406,17 @@ class DSBLibrary {
             }
         }
         return Plan;
+    }
+
+    /**
+     * Get the status
+     * @param HTML
+     * @private
+     */
+    static _getStatus(HTML) {
+        const StatusRegex = /Stand:.*<\/p>/;
+        let m = StatusRegex.exec(HTML)
+        return m[0].replaceAll('Stand:', '').replaceAll('</p>', '').trim();
     }
 
 }
