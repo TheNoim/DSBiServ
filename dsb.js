@@ -169,7 +169,7 @@ class DSBLibrary {
              * @type {string}
              */
             this._makeCookieHeaderString();
-            request(`https://${this.host}/idesk/nav.php`, {
+            request(`https://${this.host}/iserv/user/api/notifications`, {
                 headers: {
                     Cookie: this.cookieHeader
                 },
