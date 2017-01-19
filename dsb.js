@@ -21,13 +21,13 @@ class DSBLibrary {
      * @param {string} CookieFile - Path to file with cookies (iServ login cookie cache)
      * @param {boolean} [debugOutput]
      */
-    constructor(iServHost, iServUsername, iServPassword, CookieFile ,debugOutput){
+    constructor(iServHost, iServUsername, iServPassword, CookieFile, debugOutput) {
         this.host = iServHost;
         this.username = iServUsername;
         this.password = iServPassword;
         this.debug = debugOutput ? debugOutput : false;
         this.log = function (message) {
-            if (this.debug){
+            if (this.debug) {
                 console.log(message);
             }
         };
@@ -44,14 +44,14 @@ class DSBLibrary {
      * Download the dsb plans and get them parsed.
      * @param {function} DSBCallback
      */
-    getParsed(DSBCallback){
+    getParsed(DSBCallback) {
         this.getDSBPlans((error, Plans) => {
-            if (error){
+            if (error) {
                 DSBCallback(error);
             } else {
                 let ResultPlans = [];
                 async.each(Plans, (Plan, EachCallback) => {
-                    DSBLibrary.parsePlan(Plan.html, (error, BPlan) => {
+                    this.parsePlan(Plan.html, (error, BPlan) => {
                         if (error) return EachCallback(error);
                         ResultPlans.push({
                             date: Plan.date,
@@ -68,12 +68,12 @@ class DSBLibrary {
         });
     }
 
-    getDSBPlans(DSBCallback){
+    getDSBPlans(DSBCallback) {
         async.waterfall([
             (WaterfallCallback) => {
-                if (this.cookies){
+                if (this.cookies) {
                     this._checkCookies((error) => {
-                        if (error){
+                        if (error) {
                             this.log(`[DEBUG] ${error}`);
                             this._login(WaterfallCallback);
                         } else {
@@ -94,9 +94,9 @@ class DSBLibrary {
                  * Now lets get both plans: Vertretungsplan-Modul, Vertretungsplan-Modul 2
                  */
                 let Plans = [];
-                async.each(DSBLibrary._FastIFrameParse(HTML, ['iframe[name="Vertretungsplan-Modul"]','iframe[name="Vertretungsplan-Modul 2"]']), (IFrame, EachCallback) => {
+                async.each(DSBLibrary._FastIFrameParse(HTML, ['iframe[name="Vertretungsplan-Modul"]', 'iframe[name="Vertretungsplan-Modul 2"]']), (IFrame, EachCallback) => {
                     const URL = IFrame.src;
-                    if (URL){
+                    if (URL) {
                         this._DoRequest(URL, null, true, (error, HTML, Referer) => {
                             if (error) {
                                 EachCallback(error);
@@ -104,7 +104,7 @@ class DSBLibrary {
                                 const PlanURL = DSBLibrary._GetThisShittyJSLocationHref(HTML);
                                 this._DoRequest(PlanURL, Referer, false, (error, HTML) => {
                                     this._DoRequest(DSBLibrary._FastIFrameParse(HTML, 'iframe'), PlanURL, false, (error, HTML) => {
-                                        if (error){
+                                        if (error) {
                                             EachCallback(error);
                                         } else {
                                             const $ = cheerio.load(HTML);
@@ -140,7 +140,7 @@ class DSBLibrary {
      * @param LoginCallback
      * @private
      */
-    _login(LoginCallback){
+    _login(LoginCallback) {
         this.log(`[DEBUG] Start login process.`);
         /**
          * Send login request
@@ -152,18 +152,18 @@ class DSBLibrary {
             }
         }, (error, response) => {
             if (!error && response.statusCode == 302) {
-                if (response.headers["set-cookie"]){
+                if (response.headers["set-cookie"]) {
                     let cookies = {};
                     /**
                      * Parse the 'set-cookie' to a use able format.
                      */
-                    for (let u in response.headers["set-cookie"]){
-                        if (response.headers["set-cookie"].hasOwnProperty(u)){
+                    for (let u in response.headers["set-cookie"]) {
+                        if (response.headers["set-cookie"].hasOwnProperty(u)) {
                             const current = response.headers["set-cookie"][u];
                             const m = /^[^;]+/.exec(current);
-                            if (m){
+                            if (m) {
                                 const CookieSplit = m[0].split("=");
-                                if (CookieSplit[0] && CookieSplit[1]){
+                                if (CookieSplit[0] && CookieSplit[1]) {
                                     cookies[CookieSplit[0]] = CookieSplit[1];
                                 }
                             }
@@ -172,7 +172,7 @@ class DSBLibrary {
                     this.cookies = cookies;
                     this._makeCookieHeaderString();
                     this.log(`[DEBUG] Login successfully with user ${this.username}!`);
-                    if (this.cookie_cache){
+                    if (this.cookie_cache) {
                         fs.writeFile(this.cookie_cache, JSON.stringify(this.cookies), LoginCallback);
                     } else {
                         LoginCallback();
@@ -197,9 +197,9 @@ class DSBLibrary {
      * @param CookieCallback
      * @private
      */
-    _checkCookies(CookieCallback){
+    _checkCookies(CookieCallback) {
         this.log(`[DEBUG] Check if your cookies are still valid.`);
-        if (this.cookies){
+        if (this.cookies) {
             /**
              * Header cookie string from cookies.
              * @type {string}
@@ -210,7 +210,7 @@ class DSBLibrary {
                     Cookie: this.cookieHeader
                 },
                 followRedirect: false
-            },(error, response, body) => {
+            }, (error, response, body) => {
                 if (!error && response.statusCode == 200) {
                     CookieCallback();
                 } else {
@@ -226,9 +226,9 @@ class DSBLibrary {
      * Make cookie header string
      * @private
      */
-    _makeCookieHeaderString(){
+    _makeCookieHeaderString() {
         let cookieString = "";
-        for (let CookieIndex in this.cookies){
+        for (let CookieIndex in this.cookies) {
             if (this.cookies.hasOwnProperty(CookieIndex)) {
                 cookieString = cookieString + `${CookieIndex}=${this.cookies[CookieIndex]}; `;
             }
@@ -243,12 +243,12 @@ class DSBLibrary {
      * @returns {Array|jQuery}
      * @private
      */
-    static _FastIFrameParse(HTML, Selectors){
+    static _FastIFrameParse(HTML, Selectors) {
         const $ = cheerio.load(HTML);
-        if (_.isArray(Selectors)){
+        if (_.isArray(Selectors)) {
             let returnArray = [];
-            for (let index in Selectors){
-                if (Selectors.hasOwnProperty(index)){
+            for (let index in Selectors) {
+                if (Selectors.hasOwnProperty(index)) {
                     returnArray.push({
                         selector: Selectors[index],
                         src: $(Selectors[index]).attr('src')
@@ -270,7 +270,7 @@ class DSBLibrary {
      * @param RequestCallback
      * @private
      */
-    _DoRequest(URL, Referer, WithURL, RequestCallback){
+    _DoRequest(URL, Referer, WithURL, RequestCallback) {
         let options = {
             headers: {
                 Cookie: this.cookieHeader,
@@ -279,14 +279,14 @@ class DSBLibrary {
             },
             encoding: null
         };
-        if (Referer){
+        if (Referer) {
             options.headers.Referer = Referer;
         }
         this.log(`[DEBUG] Do request to ${URL} with this options: ${JSON.stringify(options)}`);
         request(URL, options, (error, response, body) => {
-            if (!error && response.statusCode == 200){
+            if (!error && response.statusCode == 200) {
                 this.log(`[DEBUG] Successfully!`);
-                if (WithURL){
+                if (WithURL) {
                     RequestCallback(null, iconv.decode(Buffer.from(body), 'cp1252'), URL);
                 } else {
                     RequestCallback(null, iconv.decode(Buffer.from(body), 'cp1252'));
@@ -315,17 +315,17 @@ class DSBLibrary {
      * @param {String} HTMLPlan
      * @param {function} ParseCallback
      */
-    static parsePlan(HTMLPlan, ParseCallback) {
+    parsePlan(HTMLPlan, ParseCallback) {
         try {
             const $ = cheerio.load(HTMLPlan);
             const PlanTableHTML = $('table[class="mon_list"]').parent().html();
             const TableJson = tabletojson.convert(PlanTableHTML);
-            if (TableJson.length == 1){
+            if (TableJson.length == 1) {
                 ParseCallback(null, DSBLibrary._reformatPlanJSON(TableJson[0]));
             } else {
                 ParseCallback(`Something went wrong. Maybe they changed the format ?`);
             }
-        } catch (e){
+        } catch (e) {
             return ParseCallback(`Something went wrong. Maybe you should check out this error: ${e}`);
         }
     }
@@ -336,75 +336,125 @@ class DSBLibrary {
      * @returns {JSON}
      * @private
      */
-    static _reformatPlanJSON(JSON){
+    static _reformatPlanJSON(JSON) {
         const Plan = JSON;
-        for (let PlanIndex in Plan){
-            if (Plan.hasOwnProperty(PlanIndex)){
+        let needToRemove = [];
+        for (let PlanIndex in Plan) {
+            if (Plan.hasOwnProperty(PlanIndex)) {
+                let LinesToAdd = [];
+                for (let TestForMultiLinesIndex in Plan) {
+                    if (!Plan.hasOwnProperty(TestForMultiLinesIndex)) continue;
+                    if (Plan[TestForMultiLinesIndex]) {
+                        if (!Plan[TestForMultiLinesIndex]["Std."] && !Plan[TestForMultiLinesIndex]["Fach"] && !Plan[TestForMultiLinesIndex]["Lehrer"] && !Plan[TestForMultiLinesIndex]["statt"] && !Plan[TestForMultiLinesIndex]["Raum"] && TestForMultiLinesIndex > PlanIndex) {
+                            LinesToAdd.push(TestForMultiLinesIndex);
+                        } else {
+                            if (TestForMultiLinesIndex > PlanIndex) {
+                                break;
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                for (let LinesToAddIndex in LinesToAdd) {
+                    if (LinesToAdd.hasOwnProperty(LinesToAddIndex)) {
+                        Plan[PlanIndex]['Klasse(n)'] = Plan[PlanIndex]['Klasse(n)'] + Plan[LinesToAdd[LinesToAddIndex]]['Klasse(n)'];
+                        Plan[PlanIndex]['Bemerkungen'] = Plan[PlanIndex]['Bemerkungen'] + Plan[LinesToAdd[LinesToAddIndex]]['Bemerkungen'];
+                    }
+                }
+                needToRemove = needToRemove.concat(LinesToAdd);
+
                 if (Plan[PlanIndex].Entfall != null && typeof Plan[PlanIndex].Entfall == 'string') Plan[PlanIndex].Entfall = Plan[PlanIndex].Entfall.toLowerCase() == "x";
 
-                for (let key in Plan[PlanIndex]){
-                    if (Plan[PlanIndex].hasOwnProperty(key)){
-                        if (typeof Plan[PlanIndex][key] == 'string'){
+                for (let key in Plan[PlanIndex]) {
+                    if (Plan[PlanIndex].hasOwnProperty(key)) {
+                        if (typeof Plan[PlanIndex][key] == 'string') {
                             Plan[PlanIndex][key] = Plan[PlanIndex][key].trim();
                             if (Plan[PlanIndex][key] == "") Plan[PlanIndex][key] = null;
                         }
                     }
                 }
 
-                if (Plan[PlanIndex]['Std.']){
+                if (Plan[PlanIndex]['Std.']) {
                     Plan[PlanIndex]['Std.'] = Plan[PlanIndex]['Std.'].replaceAll(/\s/, '');
-                    if (Plan[PlanIndex]['Std.'].includes('-')){
+                    if (Plan[PlanIndex]['Std.'].includes('-')) {
                         Plan[PlanIndex].Stunden = rangeParser.parse(Plan[PlanIndex]['Std.']);
                     } else {
                         Plan[PlanIndex].Stunden = [Plan[PlanIndex]['Std.']];
                     }
                 }
 
-                if (Plan[PlanIndex].Raum == "---"){
+                if (Plan[PlanIndex].Raum == "---") {
                     Plan[PlanIndex].Raum = null;
                 }
 
                 // 5678910111213ABBLCDMNMZAG -> JSON
-                if (Plan[PlanIndex]['Klasse(n)']){
-                    const CompleteClass = Plan[PlanIndex]['Klasse(n)'];
-                    const Years = CompleteClass.replaceAll(/\D/, '');
-                    const Classes = CompleteClass.replaceAll(/\d/, '');
+                if (Plan[PlanIndex]['Klasse(n)']) {
+
+                    let ClassParts = [];
+                    const ClassesPartsRegex = /\d+\D+/g;
+                    let m;
+                    while ((m = ClassesPartsRegex.exec(Plan[PlanIndex]['Klasse(n)'])) !== null) {
+                        if (m.index === ClassesPartsRegex.lastIndex) {
+                            ClassesPartsRegex.lastIndex++;
+                        }
+                        ClassParts.push(m[0]);
+                    }
+
                     Plan[PlanIndex].KlassenStufen = [];
                     Plan[PlanIndex].KlassenBuchstaben = [];
                     Plan[PlanIndex].Klassen = [];
-                    for (let i = 5; i <= 13; i ++){
-                        if (Years.match(i)) Plan[PlanIndex].KlassenStufen.push(i);
-                    }
-                    const ClassCharList = [
-                        /A(?!G)/,
-                        /B(?!L)/,
-                        "C",
-                        "D",
-                        "BL",
-                        "MN",
-                        "MZ",
-                        "AG"
-                    ];
-                    for (let i = 0; i < ClassCharList.length; i++){
-                        const match = Classes.match(ClassCharList[i]);
-                        if (match) Plan[PlanIndex].KlassenBuchstaben.push(match[0]);
-                    }
-                    for (let Index in Plan[PlanIndex].KlassenStufen){
-                        if (Plan[PlanIndex].KlassenStufen.hasOwnProperty(Index)){
-                            const Stufe = Plan[PlanIndex].KlassenStufen[Index];
-                            for (let BIndex in Plan[PlanIndex].KlassenBuchstaben){
-                                if (Plan[PlanIndex].KlassenBuchstaben.hasOwnProperty(BIndex)){
-                                    const Buchstabe = Plan[PlanIndex].KlassenBuchstaben[BIndex];
-                                    Plan[PlanIndex].Klassen.push(`${Stufe}${Buchstabe}`);
+
+                    for (let ClassPartsIndex in ClassParts){
+                        if (!ClassParts.hasOwnProperty(ClassPartsIndex)) continue;
+                        const CompleteClass = ClassParts[ClassPartsIndex];
+                        const Years = CompleteClass.replaceAll(/\D/, '');
+                        const Classes = CompleteClass.replaceAll(/\d/, '');
+                        let localKlassenStufen = [];
+                        let localKlassenBuchstaben = [];
+                        for (let i = 5; i <= 13; i++) {
+                            if (Years.match(i)) {
+                                Plan[PlanIndex].KlassenStufen.push(i);
+                                localKlassenStufen.push(i);
+                            }
+                        }
+                        const ClassCharList = [
+                            /A(?!G)/,
+                            /B(?!L)/,
+                            "C",
+                            "D",
+                            "BL",
+                            "MN",
+                            "MZ",
+                            "AG"
+                        ];
+                        for (let i = 0; i < ClassCharList.length; i++) {
+                            const match = Classes.match(ClassCharList[i]);
+                            if (match) localKlassenBuchstaben.push(match[0]);
+                            if (match && Plan[PlanIndex].KlassenBuchstaben.indexOf(match[0]) == -1) Plan[PlanIndex].KlassenBuchstaben.push(match[0]);
+                        }
+                        let localKlassen = [];
+                        for (let Index in localKlassenStufen) {
+                            if (localKlassenStufen.hasOwnProperty(Index)) {
+                                const Stufe = localKlassenStufen[Index];
+                                for (let BIndex in localKlassenBuchstaben) {
+                                    if (localKlassenBuchstaben.hasOwnProperty(BIndex)) {
+                                        const Buchstabe = localKlassenBuchstaben[BIndex];
+                                        localKlassen.push(`${Stufe}${Buchstabe}`);
+                                    }
                                 }
                             }
                         }
+                        Plan[PlanIndex]['Klassen'] = Plan[PlanIndex]['Klassen'].concat(localKlassen);
                     }
                     Plan[PlanIndex].GanzerJahrgang = Plan[PlanIndex].KlassenBuchstaben.length == 0 && Plan[PlanIndex].Klassen.length == 0;
 
                 }
+
+
             }
         }
+        Plan.multisplice.apply(Plan, needToRemove);
         return Plan;
     }
 
@@ -421,9 +471,23 @@ class DSBLibrary {
 
 }
 
-String.prototype.replaceAll = function(search, replacement) {
+String.prototype.replaceAll = function (search, replacement) {
     let target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
+};
+
+/**
+ * @author http://upshots.org/actionscript/javascript-splice-array-on-multiple-indices-multisplice
+ */
+Array.prototype.multisplice = function () {
+    let args = Array.apply(null, arguments);
+    args.sort(function (a, b) {
+        return a - b;
+    });
+    for (let i = 0; i < args.length; i++) {
+        let index = args[i] - i;
+        this.splice(index, 1);
+    }
 };
 
 module.exports = DSBLibrary;
