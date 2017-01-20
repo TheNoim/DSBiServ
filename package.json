@@ -1,4 +1,6 @@
 {
+  "name":"DSBiServ",
+  "version": "1.0.0",
   "dependencies": {
     "async": "^2.1.4",
     "babel-preset-es2015": "^6.18.0",
@@ -13,5 +15,19 @@
     "sanitize-filename": "^1.6.1",
     "tabletojson": "^0.4.0",
     "uglify-js": "^2.7.5"
-  }
+  },
+  "description": "A library to query the dsb plan from iServ",
+  "author": "Nils Bergmann <nilsbergmann@noim.io>",
+  "main": "dsb.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheNoim/DSBiServ"
+  },
+  "keywords": [
+    "dsb",
+    "iserv",
+    "plan",
+    "lib"
+  ],
+  "license": "MIT"
 }
