@@ -344,11 +344,12 @@ class DSBLibrary {
                 let LinesToAdd = [];
                 for (let TestForMultiLinesIndex in Plan) {
                     if (!Plan.hasOwnProperty(TestForMultiLinesIndex)) continue;
+                    if (parseInt(TestForMultiLinesIndex) <= parseInt(PlanIndex)) continue;
                     if (Plan[TestForMultiLinesIndex]) {
-                        if (!Plan[TestForMultiLinesIndex]["Std."] && !Plan[TestForMultiLinesIndex]["Fach"] && !Plan[TestForMultiLinesIndex]["Lehrer"] && !Plan[TestForMultiLinesIndex]["statt"] && !Plan[TestForMultiLinesIndex]["Raum"] && TestForMultiLinesIndex > PlanIndex) {
+                        if (!Plan[TestForMultiLinesIndex]["Std."] && !Plan[TestForMultiLinesIndex]["Fach"] && !Plan[TestForMultiLinesIndex]["Lehrer"] && !Plan[TestForMultiLinesIndex]["statt"] && !Plan[TestForMultiLinesIndex]["Raum"] && parseInt(TestForMultiLinesIndex) > parseInt(PlanIndex)) {
                             LinesToAdd.push(TestForMultiLinesIndex);
                         } else {
-                            if (TestForMultiLinesIndex > PlanIndex) {
+                            if (parseInt(TestForMultiLinesIndex) > parseInt(PlanIndex)) {
                                 break;
                             }
                         }
@@ -454,6 +455,7 @@ class DSBLibrary {
 
             }
         }
+        //console.log(needToRemove);
         Plan.multisplice.apply(Plan, needToRemove);
         return Plan;
     }
