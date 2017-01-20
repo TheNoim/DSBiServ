@@ -55,3 +55,4 @@ config.json
 cookie_cache.json
 *.html
 test_c.json
+test.json
