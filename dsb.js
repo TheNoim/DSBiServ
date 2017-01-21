@@ -10,6 +10,8 @@ const async = require('async');
 const tabletojson = require('tabletojson');
 const rangeParser = require('parse-numeric-range');
 const iconv = require('iconv-lite');
+const EventEmitter = require("events").EventEmitter;
+const WatchJS = require('watchjs');
 
 class DSBLibrary {
 
@@ -38,6 +40,11 @@ class DSBLibrary {
         } catch (e) {
             this.cookies = null;
         }
+        this.Events = new EventEmitter();
+        this.Progress = 0;
+        WatchJS.watch(this, 'Progress', () => {
+            this.Events.emit('progress', this.Max, this.Progress);
+        });
     }
 
     /**
@@ -45,6 +52,8 @@ class DSBLibrary {
      * @param {function} DSBCallback
      */
     getParsed(DSBCallback) {
+        this.Progress = 0;
+        this.Max = 11;
         this.getDSBPlans((error, Plans) => {
             if (error) {
                 DSBCallback(error);
@@ -62,6 +71,7 @@ class DSBLibrary {
                         EachCallback();
                     });
                 }, (error) => {
+                    this.Progress += this.Max - this.Progress;
                     DSBCallback(error, ResultPlans);
                 });
             }
@@ -94,6 +104,7 @@ class DSBLibrary {
                  * Now lets get both plans: Vertretungsplan-Modul, Vertretungsplan-Modul 2
                  */
                 let Plans = [];
+
                 async.each(DSBLibrary._FastIFrameParse(HTML, ['iframe[name="Vertretungsplan-Modul"]', 'iframe[name="Vertretungsplan-Modul 2"]']), (IFrame, EachCallback) => {
                     const URL = IFrame.src;
                     if (URL) {
@@ -173,8 +184,10 @@ class DSBLibrary {
                     this._makeCookieHeaderString();
                     this.log(`[DEBUG] Login successfully with user ${this.username}!`);
                     if (this.cookie_cache) {
+                        this.Progress += 1;
                         fs.writeFile(this.cookie_cache, JSON.stringify(this.cookies), LoginCallback);
                     } else {
+                        this.Progress += 1;
                         LoginCallback();
                     }
                 } else {
@@ -182,12 +195,14 @@ class DSBLibrary {
                      * With the header 'set-cookie' sets iServ the login sessions. If there is no header 'set-cookie' this error appears.
                      */
                     LoginCallback(`No 'set-cookie' found. Login not successfully ?`);
+                    this.Progress += 1;
                 }
             } else {
                 /**
                  * The response status code needs to be 302 if not this error appears.
                  */
                 LoginCallback(`Something went wrong. Response code: ${response.statusCode} | Error: ${error}`);
+                this.Progress += 1;
             }
         });
     }
@@ -212,12 +227,15 @@ class DSBLibrary {
                 followRedirect: false
             }, (error, response, body) => {
                 if (!error && response.statusCode == 200) {
+                    this.Progress += 1;
                     CookieCallback();
                 } else {
+                    this.Progress += 1;
                     CookieCallback(`It seems that your cookies are no longer valid! Response status code ${response.statusCode} | Error ${error}`);
                 }
             });
         } else {
+            this.Progress += 1;
             CookieCallback(`Where are my cookies !!?? This should never happen!`);
         }
     }
@@ -287,12 +305,15 @@ class DSBLibrary {
             if (!error && response.statusCode == 200) {
                 this.log(`[DEBUG] Successfully!`);
                 if (WithURL) {
+                    this.Progress += 1;
                     RequestCallback(null, iconv.decode(Buffer.from(body), 'cp1252'), URL);
                 } else {
+                    this.Progress += 1;
                     RequestCallback(null, iconv.decode(Buffer.from(body), 'cp1252'));
                 }
 
             } else {
+                this.Progress += 1;
                 RequestCallback(`Hmm. Something happened. Maybe you know what to do with this status code ${response.statusCode} and this error ${error}`);
             }
         });
@@ -321,11 +342,14 @@ class DSBLibrary {
             const PlanTableHTML = $('table[class="mon_list"]').parent().html();
             const TableJson = tabletojson.convert(PlanTableHTML);
             if (TableJson.length == 1) {
+                this.Progress += 1;
                 ParseCallback(null, DSBLibrary._reformatPlanJSON(TableJson[0]));
             } else {
+                this.Progress += 1;
                 ParseCallback(`Something went wrong. Maybe they changed the format ?`);
             }
         } catch (e) {
+            this.Progress += 1;
             return ParseCallback(`Something went wrong. Maybe you should check out this error: ${e}`);
         }
     }
