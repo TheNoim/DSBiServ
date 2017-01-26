@@ -33,6 +33,7 @@
   "license": "MIT",
   "devDependencies": {
     "clui": "^0.3.1",
-    "jetty": "^0.2.1"
+    "jetty": "^0.2.1",
+    "jsome": "^2.3.25"
   }
 }
