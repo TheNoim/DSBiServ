@@ -337,7 +337,7 @@ class DSBLibrary {
      * @param {function} ParseCallback
      */
     parsePlan(HTMLPlan, ParseCallback) {
-        //try {
+        try {
             const $ = cheerio.load(HTMLPlan);
             const PlanTableHTML = $('table[class="mon_list"]').parent().html();
             const TableJson = tabletojson.convert(PlanTableHTML);
@@ -348,10 +348,10 @@ class DSBLibrary {
                 this.Progress += 1;
                 ParseCallback(`Something went wrong. Maybe they changed the format ?`);
             }
-        //} catch (e) {
-        //    this.Progress += 1;
-        //    return ParseCallback(`Something went wrong. Maybe you should check out this error: ${e}`);
-        //}
+        } catch (e) {
+            this.Progress += 1;
+            return ParseCallback(`Something went wrong. Maybe you should check out this error: ${e}`);
+        }
     }
 
     /**
@@ -373,7 +373,6 @@ class DSBLibrary {
                     if (Plan[TestForMultiLinesIndex]) {
                         if (!Plan[TestForMultiLinesIndex]["Std."] && !Plan[TestForMultiLinesIndex]["Fach"] && !Plan[TestForMultiLinesIndex]["Lehrer"] && !Plan[TestForMultiLinesIndex]["statt"] && !Plan[TestForMultiLinesIndex]["Raum"] && parseInt(TestForMultiLinesIndex) > parseInt(PlanIndex)) {
                             LinesToAdd.push(TestForMultiLinesIndex);
-                            debugger;
                         } else {
                             if (parseInt(TestForMultiLinesIndex) > parseInt(PlanIndex)) {
                                 break;
