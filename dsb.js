@@ -23,7 +23,7 @@ class DSBLibrary {
      * @param {string} CookieFile - Path to file with cookies (iServ login cookie cache)
      * @param {boolean} [debugOutput]
      */
-    constructor(iServHost, iServUsername, iServPassword, CookieFile, debugOutput) {
+    constructor(iServHost, iServUsername, iServPassword, CookieFile, debugOutput, planURL) {
         this.host = iServHost;
         this.username = iServUsername;
         this.password = iServPassword;
@@ -40,6 +40,7 @@ class DSBLibrary {
         } catch (e) {
             this.cookies = null;
         }
+        this.planURL = planURL ? planURL : "iserv/plan/show/raw/DSB%20Schueler";
         this.Events = new EventEmitter();
         this.Progress = 0;
         WatchJS.watch(this, 'Progress', () => {
@@ -94,7 +95,7 @@ class DSBLibrary {
                     this._login(WaterfallCallback);
                 }
             },
-            (WaterfallCallback) => this._DoRequest(`https://${this.host}/iserv/plan/show/raw/DSB%20Schueler`, null, false, WaterfallCallback),
+            (WaterfallCallback) => this._DoRequest(`https://${this.host}/${this.planURL}`, null, false, WaterfallCallback),
             (HTML, WaterfallCallback) => WaterfallCallback(null, DSBLibrary._FastIFrameParse(HTML, 'iframe[name="DSBHPLehrer"]')),
             (URL, WaterfallCallback) => this._DoRequest(URL, null, true, WaterfallCallback),
             (HTML, URLReferer, WaterfallCallback) => WaterfallCallback(null, DSBLibrary._FastIFrameParse(HTML, 'iframe'), URLReferer),
@@ -337,20 +338,15 @@ class DSBLibrary {
      * @param {function} ParseCallback
      */
     parsePlan(HTMLPlan, ParseCallback) {
-        try {
-            const $ = cheerio.load(HTMLPlan);
-            const PlanTableHTML = $('table[class="mon_list"]').parent().html();
-            const TableJson = tabletojson.convert(PlanTableHTML);
-            if (TableJson.length == 1) {
-                this.Progress += 1;
-                ParseCallback(null, DSBLibrary._reformatPlanJSON(TableJson[0]));
-            } else {
-                this.Progress += 1;
-                ParseCallback(`Something went wrong. Maybe they changed the format ?`);
-            }
-        } catch (e) {
+        const $ = cheerio.load(HTMLPlan);
+        const PlanTableHTML = $('table[class="mon_list"]').parent().html();
+        const TableJson = tabletojson.convert(PlanTableHTML);
+        if (TableJson.length == 1) {
             this.Progress += 1;
-            return ParseCallback(`Something went wrong. Maybe you should check out this error: ${e}`);
+            ParseCallback(null, DSBLibrary._reformatPlanJSON(TableJson[0]));
+        } else {
+            this.Progress += 1;
+            ParseCallback(`Something went wrong. Maybe they changed the format ?`);
         }
     }
 
@@ -432,7 +428,7 @@ class DSBLibrary {
                     Plan[PlanIndex].KlassenBuchstaben = [];
                     Plan[PlanIndex].Klassen = [];
 
-                    for (let ClassPartsIndex in ClassParts){
+                    for (let ClassPartsIndex in ClassParts) {
                         if (!ClassParts.hasOwnProperty(ClassPartsIndex)) continue;
                         const CompleteClass = ClassParts[ClassPartsIndex];
                         const Years = CompleteClass.replaceAll(/\D/, '');

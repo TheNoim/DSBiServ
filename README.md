@@ -15,7 +15,7 @@ After the module got the last html page with the final plan, it will parse it in
 
 ```javascript
 const DSBLib = require('dsbiserv');
-const dsb = new DSBLib('myschool.de', 'max.mustermann', 'mypassword', 'A path to a cookie session cache (OPTIONAL)', true /*DEBUG OUTPUT YES OR NO*/);
+const dsb = new DSBLib('myschool.de', 'max.mustermann', 'mypassword', 'A path to a cookie session cache (OPTIONAL)', true /*DEBUG OUTPUT YES OR NO*/, 'iserv/plan/show/raw/DSB%20Schueler');
 
 // Now you have two options. Only get the html of the plan or get it parsed as json
 
