@@ -3,6 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="0061605e-6827-46be-b78d-1543eb3ca6e5" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dsb.js" afterPath="$PROJECT_DIR$/dsb.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/package.json" afterPath="$PROJECT_DIR$/package.json" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -23,21 +25,24 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="package.json" pinned="false" current-in-tab="true">
+      <file leaf-file-name="package.json" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/package.json">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="225">
-              <caret line="15" column="28" lean-forward="false" selection-start-line="15" selection-start-column="28" selection-end-line="15" selection-end-column="28" />
-              <folding />
+              <caret line="17" column="26" lean-forward="false" selection-start-line="17" selection-start-column="26" selection-end-line="17" selection-end-column="26" />
+              <folding>
+                <marker date="1486990918000" expanded="true" signature="652:725" ph="{&quot;type&quot;: &quot;git&quot;...}" />
+                <marker date="1486990918000" expanded="true" signature="741:792" ph="[...]" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="dsb.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="dsb.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/dsb.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="525">
-              <caret line="42" column="78" lean-forward="false" selection-start-line="42" selection-start-column="44" selection-end-line="42" selection-end-column="78" />
+            <state relative-caret-position="375">
+              <caret line="38" column="55" lean-forward="true" selection-start-line="38" selection-start-column="55" selection-end-line="38" selection-end-column="55" />
               <folding>
                 <element signature="e#0#47#0" expanded="false" />
               </folding>
@@ -160,9 +165,9 @@
         <option value="$PROJECT_DIR$/BUGU.html" />
         <option value="$PROJECT_DIR$/node_modules/jsome/lib/generator.js" />
         <option value="$PROJECT_DIR$/Bug.js" />
+        <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/package.json" />
         <option value="$PROJECT_DIR$/dsb.js" />
-        <option value="$PROJECT_DIR$/README.md" />
       </list>
     </option>
   </component>
@@ -177,6 +182,9 @@
   <component name="JsGulpfileManager">
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
+  </component>
+  <component name="NodeModulesDirectoryManager">
+    <handled-path value="$PROJECT_DIR$/node_modules" />
   </component>
   <component name="ProjectFrameBounds">
     <option name="width" value="1920" />
@@ -200,6 +208,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
@@ -215,7 +224,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -419,7 +427,8 @@
       <workItem from="1484918372094" duration="7619000" />
       <workItem from="1485013901262" duration="2937000" />
       <workItem from="1485441461042" duration="3133000" />
-      <workItem from="1485696769279" duration="184000" />
+      <workItem from="1485696769279" duration="243000" />
+      <workItem from="1486990893186" duration="162000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1484513106208</created>
@@ -582,11 +591,18 @@
       <option name="project" value="LOCAL" />
       <updated>1485696889263</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="1.3.0">
+      <created>1485696957660</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1485696957660</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="57137000" />
+    <option name="totallyTimeSpent" value="57358000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -602,7 +618,7 @@
     <editor active="false" />
     <layout>
       <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2657082" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2683706" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32959184" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -650,7 +666,8 @@
     <MESSAGE value="Very important BugFix - Now parser works with more then two lines" />
     <MESSAGE value="Removed debug shit&#10;" />
     <MESSAGE value="Fix #1 &amp; #2" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix #1 &amp; #2" />
+    <MESSAGE value="1.3.0" />
+    <option name="LAST_COMMIT_MESSAGE" value="1.3.0" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -701,7 +718,10 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="150">
           <caret line="10" column="32" lean-forward="false" selection-start-line="10" selection-start-column="32" selection-end-line="10" selection-end-column="32" />
-          <folding />
+          <folding>
+            <marker date="1486990918000" expanded="true" signature="652:725" ph="{&quot;type&quot;: &quot;git&quot;...}" />
+            <marker date="1486990918000" expanded="true" signature="741:792" ph="[...]" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -824,16 +844,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/cookie_cache.json" />
-    <entry file="file://$PROJECT_DIR$/dsb.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="525">
-          <caret line="42" column="78" lean-forward="false" selection-start-line="42" selection-start-column="44" selection-end-line="42" selection-end-column="78" />
-          <folding>
-            <element signature="e#0#47#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/test.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="90">
@@ -886,8 +896,21 @@
     <entry file="file://$PROJECT_DIR$/package.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
-          <caret line="15" column="28" lean-forward="false" selection-start-line="15" selection-start-column="28" selection-end-line="15" selection-end-column="28" />
-          <folding />
+          <caret line="17" column="26" lean-forward="false" selection-start-line="17" selection-start-column="26" selection-end-line="17" selection-end-column="26" />
+          <folding>
+            <marker date="1486990918000" expanded="true" signature="652:725" ph="{&quot;type&quot;: &quot;git&quot;...}" />
+            <marker date="1486990918000" expanded="true" signature="741:792" ph="[...]" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dsb.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="375">
+          <caret line="38" column="55" lean-forward="true" selection-start-line="38" selection-start-column="55" selection-end-line="38" selection-end-column="55" />
+          <folding>
+            <element signature="e#0#47#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>

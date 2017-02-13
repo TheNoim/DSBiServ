@@ -3,7 +3,7 @@
  */
 
 const request = require('request');
-const fs = require('fs');
+const fs = require('fs-extra');
 const cheerio = require('cheerio');
 const _ = require('lodash');
 const async = require('async');
@@ -21,7 +21,7 @@ class DSBLibrary {
      * @param {string} iServUsername
      * @param {string} iServPassword
      * @param {string} CookieFile - Path to file with cookies (iServ login cookie cache)
-     * @param {boolean} [debugOutput]
+     * @param {boolean} [debugOutput]y
      */
     constructor(iServHost, iServUsername, iServPassword, CookieFile, debugOutput, planURL) {
         this.host = iServHost;
@@ -36,7 +36,7 @@ class DSBLibrary {
         this.cookies = null;
         this.cookie_cache = CookieFile ? CookieFile : null;
         try {
-            this.cookies = require(CookieFile);
+            this.cookies = fs.readJsonSync(CookieFile);
         } catch (e) {
             this.cookies = null;
         }
