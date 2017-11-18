@@ -1,4 +1,6 @@
 # DSB iServ Library
+# Note: Not maintained anymore. Please use [this](https://github.com/TheNoim/DSBAPI) instead. 
+
 This Library tries to help you receiving dsb plans from iServ.  
 
 #### What do I need ?
