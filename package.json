@@ -14,7 +14,7 @@
     "parse-numeric-range": "^0.0.2",
     "request": "^2.79.0",
     "sanitize-filename": "^1.6.1",
-    "tabletojson": "^0.4.0",
+    "tabletojson": "^0.7.0",
     "uglify-js": "^2.7.5",
     "watchjs": "^0.0.0"
   },
